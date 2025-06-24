@@ -1,18 +1,18 @@
 #pragma once
 
-#include <tuple>
-
 #include "parse.hpp"
-#include "format_string.hpp"
-#include "types.hpp"
 
 namespace stdx {
 
-// Главная функция
 template <details::format_string fmt, details::fixed_string source, typename... Ts>
-consteval details::scan_result<Ts...> scan() { // передайте пакет параметров в scan_result
-// измените реализацию
-    return details::scan_result<Ts...>{42};
+consteval details::scan_result<Ts...> scan() {
+    static_assert(fmt.placeholders_count == sizeof...(Ts), "placeholders count does not equal types count");
+
+    static constexpr auto make_tuple = []<std::size_t... Is>(std::index_sequence<Is...>) {
+        return std::make_tuple(details::parse_input<Is, fmt, source, typename std::tuple_element<Is, std::tuple<Ts...>>::type>()...);
+    };
+
+    return details::scan_result<Ts...>{make_tuple(std::make_index_sequence<sizeof...(Ts)>{})};
 }
 
 } // namespace stdx
